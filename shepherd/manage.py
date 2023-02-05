@@ -11,6 +11,7 @@ from .shepherd import Shepherd
 from .sheep.welcome import welcome
 from .api.views import create_shepherd_routes
 from .config import load_shepherd_config
+from .utils.logging_config import setup_logging
 
 
 @click.command()
@@ -29,10 +30,7 @@ def run(host, port, config_file) -> None:
     with open(config_file, "r") as config_stream:
         config = load_shepherd_config(config_stream)
 
-    # set-up logging
-    logging.basicConfig(level=config.logging.log_level,
-                        format="%(asctime)s-%(levelname)s-%(name)s::%(module)s|%(lineno)s:: %(message)s")
-    logging.getLogger("urllib3").setLevel(logging.WARNING)
+    setup_logging()
     welcome()
 
     # create minio, shepherd and API handles
