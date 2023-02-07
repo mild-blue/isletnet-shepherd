@@ -46,7 +46,7 @@ def http_error_handler(error: HTTPError):
 @web.middleware
 async def middleware_log_on_request(request: web.Request, handler: web.RequestHandler):
     # before request
-    request_id = requests.match_info['job_id'] if 'job_id' in request.match_info else uuid.uuid4()
+    request_id = request.match_info['job_id'] if 'job_id' in request.match_info else uuid.uuid4()
     logging.info(f'User {request.remote}: Request {request_id} started. '
                  f'Method: {request.method} {request.path}')
     total_time = perf_counter()

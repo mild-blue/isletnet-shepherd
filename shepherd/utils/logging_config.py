@@ -27,7 +27,8 @@ LOGGING_CONFIG = {
             "handlers": [
                 "console"
             ],
-        }
+        },
+        "aiohttp.server": {}
     }
 }
 
