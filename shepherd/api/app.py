@@ -52,6 +52,9 @@ async def middleware_log_on_request(request: web.Request, handler: web.RequestHa
             for key in json:
                 if isinstance(json[key], str) and len(json[key]) >= max_chars_amount:
                     json[key] = '<HIDDEN BIG TEXT>'
+                elif isinstance(json[key], dict):
+                    # optimize recursively all dicts inside the dict
+                    optimize_json_info(json[key])
             return json
 
         return optimize_json_info(await request.json()) if await request.text() else {}
