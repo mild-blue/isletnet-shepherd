@@ -1,8 +1,28 @@
 import logging
+import traceback
 
+from datetime import datetime, timezone
 from logging.config import dictConfig
 
 LOGGING_DIRECTORY = '../logs'
+
+
+class BaseFormatter(logging.Formatter):
+
+    @staticmethod
+    def __insert_exception(record):
+        if not record.exc_info:
+            return ''
+        return '\n' + ''.join(traceback.format_exception(record.exc_info[0],
+                                                         record.exc_info[1],
+                                                         record.exc_info[2]))
+
+    def format(self, record: logging.LogRecord) -> str:
+        time = datetime.fromtimestamp(record.created,
+                                      timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+        return f'{time}-{record.levelname}-{record.name}:: ' \
+               f'{record.module}|{record.lineno}:: {record.getMessage()}' + \
+                self.__insert_exception(record)
 
 
 LOGGING_CONFIG = {
@@ -10,12 +30,10 @@ LOGGING_CONFIG = {
     "disable_existing_loggers": True,
     "formatters": {
         "terminal": {
-            "level": "NOTSET",
-            "format": "%(asctime)s-%(levelname)s-%(name)s::%(module)s|%(lineno)s:: %(message)s"
+            "()": BaseFormatter
         },
         "file": {
-            "level": "NOTSET",
-            "format": "%(asctime)s-%(levelname)s-%(name)s::%(module)s|%(lineno)s:: %(message)s"
+            "()": BaseFormatter
         }
     },
     "handlers": {
@@ -52,7 +70,12 @@ LOGGING_CONFIG = {
                 "console", "info_file", "error_file"
             ],
         },
-        "aiohttp.server": {}
+        "aiohttp.server": {
+            "level": "WARNING",
+            "handlers": [
+                "console", "info_file", "error_file"
+            ]
+        }
     }
 }
 
