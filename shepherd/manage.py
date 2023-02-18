@@ -30,7 +30,7 @@ def run(host, port, config_file) -> None:
     with open(config_file, "r") as config_stream:
         config = load_shepherd_config(config_stream)
 
-    setup_logging()
+    setup_logging(config.logging.logging_directory)
     welcome()
 
     # create minio, shepherd and API handles

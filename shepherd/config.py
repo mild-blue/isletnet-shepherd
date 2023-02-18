@@ -50,6 +50,7 @@ class RegistryConfig(Model):
 
 class LoggingConfig(Model):
     level: str = StringType(default="info")
+    logging_directory: str = StringType(default="../logs")
 
     @property
     def log_level(self):
@@ -59,7 +60,9 @@ class LoggingConfig(Model):
 class ShepherdConfig(Model):
     data_root: str = StringType(required=True)
     storage: StorageConfig = ModelType(StorageConfig, required=True)
-    logging: LoggingConfig = ModelType(LoggingConfig, required=False, default=LoggingConfig(dict(level='info')))
+    logging: LoggingConfig = ModelType(LoggingConfig, required=False,
+                                                      default=LoggingConfig(dict(level='info',
+                                                                                 logging_directory='../logs')))
     sheep: Dict[str, Dict[str, Any]] = DictType(DictType(BaseType), required=True)
     registry: Optional[RegistryConfig] = ModelType(RegistryConfig, required=False)
 
