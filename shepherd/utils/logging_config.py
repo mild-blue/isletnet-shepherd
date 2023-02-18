@@ -24,10 +24,23 @@ class BaseFormatter(logging.Formatter):
                 self.__insert_exception(record)
 
 
+class LoggerMaxInfoFilter(logging.Filter):
+    """
+    Logger filter, which allows logs only with level INFO or lower.
+    """
+    def filter(self, record: logging.LogRecord) -> bool:
+        return record.levelno <= logging.INFO
+
+
 def setup_logging_dict_config(logging_directory: str):
     logging_config = {
         "version": 1,
         "disable_existing_loggers": True,
+        "filters": {
+            "max_info_filter": {
+                "()": LoggerMaxInfoFilter
+            }
+        },
         "formatters": {
             "terminal": {
                 "()": BaseFormatter
@@ -37,11 +50,18 @@ def setup_logging_dict_config(logging_directory: str):
             }
         },
         "handlers": {
-            "console": {
+            "console_info": {
                 "class": "logging.StreamHandler",
+                "filters": ["max_info_filter"],
                 "level": "NOTSET",
                 "formatter": 'terminal',
                 "stream": "ext://sys.stdout"
+            },
+            "console_error": {
+                "class": "logging.StreamHandler",
+                "level": "WARNING",
+                "formatter": 'terminal',
+                "stream": "ext://sys.stderr"
             },
             "info_file": {
                 "class": "logging.handlers.RotatingFileHandler",
@@ -67,13 +87,13 @@ def setup_logging_dict_config(logging_directory: str):
                 # root logger
                 "level": "NOTSET",
                 "handlers": [
-                    "console", "info_file", "error_file"
+                    "console_info", "console_error", "info_file", "error_file"
                 ],
             },
             "aiohttp.server": {
                 "level": "WARNING",
                 "handlers": [
-                    "console", "info_file", "error_file"
+                    "console_info", "console_error", "info_file", "error_file"
                 ]
             }
         }
