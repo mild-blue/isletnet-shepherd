@@ -102,7 +102,15 @@ def setup_logging_dict_config(logging_directory: str):
     dictConfig(config=logging_config)
 
 
-def setup_logging(logging_directory: str = '../logs'):
+def setup_logging(logging_level: int = logging.INFO,
+                  logging_directory: str = '../logs'):
     Path(logging_directory).mkdir(parents=True, exist_ok=True)
     setup_logging_dict_config(logging_directory)
+
     logging.getLogger("urllib3").setLevel(logging.WARNING)  # switch off unnecessary logs
+
+    if isinstance(logging_level, int):
+        logging.disable(level=logging_level - 10)  # set minimum logging level for all loggers
+    else:
+        logging.warning(f"The logging level {logging_level} is not an integer, so it will be ignored. "
+                        "The level of logs corresponds to the initial values in the logging_config.py.")
