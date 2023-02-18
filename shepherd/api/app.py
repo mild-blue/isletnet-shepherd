@@ -45,10 +45,22 @@ def http_error_handler(error: HTTPError):
 
 @web.middleware
 async def middleware_log_on_request(request: web.Request, handler: web.RequestHandler):
+
+    async def get_request_arguments(request: web.Request) -> dict:
+
+        def optimize_json_info(json: dict, max_chars_amount=100) -> dict:
+            for key in json:
+                if isinstance(json[key], str) and len(json[key]) >= max_chars_amount:
+                    json[key] = '<HIDDEN BIG TEXT>'
+            return json
+
+        return optimize_json_info(await request.json()) if await request.text() else {}
+
     # before request
     request_id = request.match_info['job_id'] if 'job_id' in request.match_info else uuid.uuid4()
-    logging.info(f'User {request.remote}: Request {request_id} started. '
-                 f'Method: {request.method} {request.path}')
+    request_args = await get_request_arguments(request)
+    logging.info(f'Request {request_id} started. '
+                 f'Method: {request.method} {request.path}. Arguments: {request_args or "-"}.')
     total_time = perf_counter()
 
     # request
@@ -57,7 +69,7 @@ async def middleware_log_on_request(request: web.Request, handler: web.RequestHa
     # after request
     logging.info(
         f'User {request.remote}: Request {request_id} took {int(total_time * 1000)} ms. '
-        f'Method: {request.method} {request.path}. '
+        f'Method: {request.method} {request.path}. Arguments: {request_args or "-"}.'
         f'Response status code: {response.status}.')
 
     return response
