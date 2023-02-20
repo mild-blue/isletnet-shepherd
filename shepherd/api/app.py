@@ -59,6 +59,9 @@ async def middleware_log_on_request(request: web.Request, handler: web.RequestHa
 
         return optimize_json_info(await request.json()) if await request.text() else {}
 
+    def get_response_body(response) -> str:
+        return f' Response body: {response.body}.' if hasattr(response, "body") else ''
+
     # before request
     request_id = request.match_info['job_id'] if 'job_id' in request.match_info else uuid.uuid4()
     request_args = await get_request_arguments(request)
@@ -73,8 +76,7 @@ async def middleware_log_on_request(request: web.Request, handler: web.RequestHa
     logging.info(
         f'Request {request_id} took {int(total_time * 1000)} ms. '
         f'Method: {request.method} {request.path}. Arguments: {request_args or "-"}.'
-        f'Response status code: {response.status}. Response body: '
-        f'{response.body if response.body_length < 20 else "<LONG BODY>"}')
+        f'Response status code: {response.status}.{get_response_body(response)}')
 
     return response
 
