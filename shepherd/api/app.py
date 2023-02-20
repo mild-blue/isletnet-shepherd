@@ -60,7 +60,12 @@ async def middleware_log_on_request(request: web.Request, handler: web.RequestHa
         return optimize_json_info(await request.json()) if await request.text() else {}
 
     def get_response_body(response) -> str:
-        return f' Response body: {response.body}.' if hasattr(response, "body") else ''
+        if not hasattr(response, "text"):
+            return ''
+        elif isinstance(response.text, str):
+            return f' Response content: {response.text}.'
+
+        return ' Response content: <unreadable content type>.'
 
     # before request
     request_id = request.match_info['job_id'] if 'job_id' in request.match_info else uuid.uuid4()
