@@ -71,7 +71,7 @@ async def middleware_log_on_request(request: web.Request, handler: web.RequestHa
 
     # after request
     logging.info(
-        f'User {request.remote}: Request {request_id} took {int(total_time * 1000)} ms. '
+        f'Request {request_id} took {int(total_time * 1000)} ms. '
         f'Method: {request.method} {request.path}. Arguments: {request_args or "-"}.'
         f'Response status code: {response.status}.')
 
