@@ -16,6 +16,8 @@ with storage, sheep and logging is also a part of the IsletNet repository.
 ### Prerequisites
 
 1. Install dependencies with `pip install .`
+On every change, do this step. Otherwise, when launching the application, 
+the old unmodified version will be run. Shepherd works as a library
 2. Make sure you have Docker installed and that your user has permissions to use 
    it
 3. If you intend to run computations on a GPU, install also `nvidia-docker2`
