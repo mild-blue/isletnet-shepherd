@@ -4,6 +4,15 @@
 
 Provides access to computation resources on a single machine.
 
+## IsletNet specification
+[IsletNet](https://github.com/mild-blue/isletnet) uses some functionality of the 
+Shepherd library for image processing, with the ability to customize it. 
+In addition to the required dependencies described in [setup.py](setup.py), 
+more dependencies are installed for IsletNet computations 
+([requirements here](https://github.com/mild-blue/isletnet/blob/master/backend/shepherd/requirements.txt) + TensorFlow).
+Special [config file](https://github.com/mild-blue/isletnet/blob/master/backend/shepherd/config.yaml) 
+with storage, sheep and logging is also a part of the IsletNet repository.
+
 ## Development Guide
 
 ### Prerequisites
@@ -72,3 +81,13 @@ You can also run stress test with time measurements:
 ```
 molotov --use-extension tests/stress/measure_time.py --max-runs 10 tests/stress/loadtest.py
 ```
+
+### Logging
+We log every request Shepherd receives from sheep and clients. 
+The process logs, which refer to sheep, are saved in files specified 
+for the corresponding sheep as `stderr_file` and `stdout_file` in the config. 
+The logs for Shepherd itself are saved in a file whose directory is specified in 
+the `logging_directory` parameter of the `logging` section in the config 
+(if not specified, the default value `../logs` is used). 
+Additionally, the logging level can be set in the same logging 
+section by changing the `level` parameter (default is `debug`).
