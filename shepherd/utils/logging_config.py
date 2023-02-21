@@ -32,7 +32,7 @@ class LoggerMaxInfoFilter(logging.Filter):
         return record.levelno <= logging.INFO
 
 
-def setup_logging_dict_config(logging_directory: str):
+def setup_logging_dict_config(logging_directory: str, logging_level: int = logging.DEBUG):
     logging_config = {
         "version": 1,
         "disable_existing_loggers": True,
@@ -53,19 +53,19 @@ def setup_logging_dict_config(logging_directory: str):
             "console_info": {
                 "class": "logging.StreamHandler",
                 "filters": ["max_info_filter"],
-                "level": "NOTSET",
+                "level": logging_level,
                 "formatter": 'terminal',
                 "stream": "ext://sys.stdout"
             },
             "console_error": {
                 "class": "logging.StreamHandler",
-                "level": "WARNING",
+                "level": logging_level if logging_level > logging.WARNING else logging.WARNING,
                 "formatter": 'terminal',
                 "stream": "ext://sys.stderr"
             },
             "info_file": {
                 "class": "logging.handlers.RotatingFileHandler",
-                "level": "INFO",
+                "level": logging_level,
                 "formatter": "file",
                 "filename": f"{logging_directory}/info_shepherd.log",
                 "maxBytes": 5000000,
@@ -74,7 +74,7 @@ def setup_logging_dict_config(logging_directory: str):
             },
             "error_file": {
                 "class": "logging.handlers.RotatingFileHandler",
-                "level": "ERROR",
+                "level": logging_level if logging_level > logging.WARNING else logging.WARNING,
                 "formatter": "file",
                 "filename": f"{logging_directory}/error_shepherd.log",
                 "maxBytes": 5000000,
@@ -105,12 +105,6 @@ def setup_logging_dict_config(logging_directory: str):
 def setup_logging(logging_level: int = logging.INFO,
                   logging_directory: str = '../logs'):
     Path(logging_directory).mkdir(parents=True, exist_ok=True)
-    setup_logging_dict_config(logging_directory)
+    setup_logging_dict_config(logging_directory, logging_level)
 
     logging.getLogger("urllib3").setLevel(logging.WARNING)  # switch off unnecessary logs
-
-    if isinstance(logging_level, int):
-        logging.disable(level=logging_level - 10)  # set minimum logging level for all loggers
-    else:
-        logging.warning(f"The logging level {logging_level} is not an integer, so it will be ignored. "
-                        "The level of logs corresponds to the initial values in the logging_config.py.")
