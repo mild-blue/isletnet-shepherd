@@ -61,7 +61,9 @@ def create_shepherd_routes(shepherd: Shepherd, storage: Storage) -> web.RouteTab
         return StartJobResponse()
 
     @api.get("/jobs/{job_id}/status")
-    @oapi.responds_with(JobStatusResponse)
+    @oapi.responds_with(JobErrorResponse, code=500)
+    @oapi.responds_with(JobNotReadyResponse, code=202)
+    @oapi.responds_with(JobStatusResponse, code=200)
     async def get_job_status(job_id: str):
         """
         Get status information for a job.
@@ -70,10 +72,13 @@ def create_shepherd_routes(shepherd: Shepherd, storage: Storage) -> web.RouteTab
         """
 
         status = shepherd.get_job_status(job_id)
-        if status is not None:
-            return status
+        if status is None:
+            status = await storage.get_job_status(job_id)
 
-        status = await storage.get_job_status(job_id)
+        if status is not None and status.status == JobStatus.FAILED:
+            return JobErrorResponse(dict(message=status.error_details.message))
+        if status is None or status.status != JobStatus.DONE:
+            return JobNotReadyResponse()
 
         return status
 
