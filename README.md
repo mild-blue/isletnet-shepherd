@@ -49,6 +49,7 @@ After launching the shepherd, there will be an HTTP API available on the
 configured port that can be used to control the shepherd.
 
 ### Processing a Request Directly
+<i>(The relevance of this information has not been confirmed for a long time).</i></br>
 
 To process a request for debugging purposes, you need to:
 
@@ -65,6 +66,7 @@ First, install the test requirements `pip install '.[tests]'`.
 The test suite can be run with `python setup.py test`.
 
 ### Running Stress Tests
+<i>(The relevance of this information has not been confirmed for a long time).</i></br>
 
 First, install the test requirements `pip install '.[tests]'`.
 
