@@ -1,14 +1,23 @@
 # Shepherd
 
-[![CircleCI](https://circleci.com/gh/iterait/shepherd.png?style=shield&circle-token=1045f8994f4f35d81130331600a0683e16bbb4f9)](https://circleci.com/gh/iterait/shepherd/tree/master)
-
 Provides access to computation resources on a single machine.
+
+## IsletNet specification
+[IsletNet](https://github.com/mild-blue/isletnet) uses some functionality of the 
+Shepherd library for image processing, with the ability to customize it. 
+In addition to the required dependencies described in [setup.py](setup.py), 
+more dependencies are installed for IsletNet computations 
+([requirements here](https://github.com/mild-blue/isletnet/blob/master/backend/shepherd/requirements.txt) + TensorFlow).
+Special [config file](https://github.com/mild-blue/isletnet/blob/master/backend/shepherd/config.yaml) 
+with storage, sheep and logging is also a part of the IsletNet repository.
 
 ## Development Guide
 
 ### Prerequisites
 
 1. Install dependencies with `pip install .`
+On every change, do this step. Otherwise, when launching the application, 
+the old unmodified version will be run. Shepherd works as a library
 2. Make sure you have Docker installed and that your user has permissions to use 
    it
 3. If you intend to run computations on a GPU, install also `nvidia-docker2`
@@ -40,6 +49,7 @@ After launching the shepherd, there will be an HTTP API available on the
 configured port that can be used to control the shepherd.
 
 ### Processing a Request Directly
+<i>(The relevance of this information has not been confirmed for a long time).</i></br>
 
 To process a request for debugging purposes, you need to:
 
@@ -56,6 +66,7 @@ First, install the test requirements `pip install '.[tests]'`.
 The test suite can be run with `python setup.py test`.
 
 ### Running Stress Tests
+<i>(The relevance of this information has not been confirmed for a long time).</i></br>
 
 First, install the test requirements `pip install '.[tests]'`.
 
@@ -72,3 +83,13 @@ You can also run stress test with time measurements:
 ```
 molotov --use-extension tests/stress/measure_time.py --max-runs 10 tests/stress/loadtest.py
 ```
+
+### Logging
+We log every request Shepherd receives from sheep and clients. 
+The process logs, which refer to sheep, are saved in files specified 
+for the corresponding sheep as `stderr_file` and `stdout_file` in the config. 
+The logs for Shepherd itself are saved in a file whose directory is specified in 
+the `logging_directory` parameter of the `logging` section in the config 
+(if not specified, the default value `../logs` is used). 
+Additionally, the logging level can be set in the same logging 
+section by changing the `level` parameter (default is `debug`).
