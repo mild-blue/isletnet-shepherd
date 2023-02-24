@@ -32,7 +32,7 @@ class LoggerMaxInfoFilter(logging.Filter):
         return record.levelno <= logging.INFO
 
 
-def setup_logging_dict_config(logging_directory: str, logging_level: int = logging.DEBUG):
+def setup_logging_dict_config(logging_directory: str, logging_level: int = logging.INFO):
     logging_config = {
         "version": 1,
         "disable_existing_loggers": True,
@@ -102,7 +102,7 @@ def setup_logging_dict_config(logging_directory: str, logging_level: int = loggi
     dictConfig(config=logging_config)
 
 
-def setup_logging(logging_level: int = logging.DEBUG,
+def setup_logging(logging_level: int = logging.INFO,
                   logging_directory: str = '../logs'):
     Path(logging_directory).mkdir(parents=True, exist_ok=True)
     setup_logging_dict_config(logging_directory, logging_level)
