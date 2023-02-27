@@ -1,5 +1,7 @@
 import os
 import logging
+import uuid
+from time import perf_counter
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPError
 from apistrap.errors import InvalidFieldsError
@@ -41,6 +43,49 @@ def http_error_handler(error: HTTPError):
     return (ErrorResponse({"message": error.text})), error.status_code
 
 
+@web.middleware
+async def middleware_log_on_request(request: web.Request, handler: web.RequestHandler):
+
+    async def get_request_arguments(request: web.Request) -> dict:
+
+        def optimize_json_info(json: dict, max_chars_amount=100) -> dict:
+            for key in json:
+                if isinstance(json[key], str) and len(json[key]) >= max_chars_amount:
+                    json[key] = '<HIDDEN BIG TEXT>'
+                elif isinstance(json[key], dict):
+                    # optimize recursively all dicts inside the dict
+                    optimize_json_info(json[key])
+            return json
+
+        return optimize_json_info(await request.json()) if await request.text() else {}
+
+    def get_response_body(response) -> str:
+        if not hasattr(response, "text"):
+            return ''
+        elif isinstance(response.text, str):
+            return f' Response content: {response.text}.'
+
+        return ' Response content: <unreadable content type>.'
+
+    # before request
+    request_id = request.match_info['job_id'] if 'job_id' in request.match_info else uuid.uuid4()
+    request_args = await get_request_arguments(request)
+    logging.info(f'Request {request_id} started. '
+                 f'Method: {request.method} {request.path}. Arguments: {request_args or "-"}.')
+    total_time = perf_counter()
+
+    # request
+    response = await handler(request)
+
+    # after request
+    logging.info(
+        f'Request {request_id} took {int(total_time * 1000)} ms. '
+        f'Method: {request.method} {request.path}. Arguments: {request_args or "-"}.'
+        f'Response status code: {response.status}.{get_response_body(response)}')
+
+    return response
+
+
 def create_app(debug=None) -> web.Application:
     """
     Create the AioHTTP app.
@@ -50,7 +95,9 @@ def create_app(debug=None) -> web.Application:
     :return: a new application object
     """
 
-    app = web.Application(debug=debug if debug is not None else os.getenv('DEBUG', False), client_max_size=10*1024**3)
+    app = web.Application(debug=debug if debug is not None else os.getenv('DEBUG', False),
+                          client_max_size=10*1024**3,
+                          middlewares=[middleware_log_on_request])
 
     oapi.add_error_handler(NameConflictError, 409, error_handler)
     oapi.add_error_handler(ApiClientError, 400, error_handler)
