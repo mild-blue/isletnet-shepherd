@@ -257,9 +257,6 @@ class Shepherd:
         status.error_details = error
         status.finished_at = datetime.utcnow()
 
-        async with self.job_done_condition:
-            self.job_done_condition.notify_all()
-
         try:
             shutil.rmtree(path.join(sheep.sheep_data_root, job_id), ignore_errors=True)
             await self._job_status_update_queue.enqueue_task(self._storage.set_job_status(job_id, status.copy()))
@@ -280,7 +277,6 @@ class Shepherd:
                 sheep = self._get_sheep(sheep_id)
                 message = await Messenger.recv(sheep.socket, [DoneMessage, ErrorMessage], noblock=True)
                 job_id = message.job_id
-
                 # clean-up the working directory and upload the results
                 working_directory = path.join(self._get_sheep(sheep_id).sheep_data_root, job_id)
                 await self._storage.push_job_data(job_id, working_directory)
@@ -300,12 +296,11 @@ class Shepherd:
                         "exception_traceback": message.exception_traceback
                     })
                     await self._report_job_failed(job_id, error, sheep)
-                    self._job_status.pop(job_id)
-                    logging.info('Job `%s` from sheep `%s` failed (%s)', job_id, sheep_id, message.short_error)
+                    logging.info('Job `%s` from sheep `%s` failed (%s)', job_id, sheep_id, message.message)
 
-                # notify about the finished job
                 sheep.in_progress.remove(job_id)
 
+                # notify about the finished job
                 async with self.job_done_condition:
                     self.job_done_condition.notify_all()
 
