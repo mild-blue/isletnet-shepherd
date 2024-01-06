@@ -300,12 +300,11 @@ class Shepherd:
                         "exception_traceback": message.exception_traceback
                     })
                     await self._report_job_failed(job_id, error, sheep)
-                    self._job_status.pop(job_id)
-                    logging.info('Job `%s` from sheep `%s` failed (%s)', job_id, sheep_id, message.short_error)
+                    logging.info('Job `%s` from sheep `%s` failed (%s)', job_id, sheep_id, message.message)
 
-                # notify about the finished job
                 sheep.in_progress.remove(job_id)
 
+                # notify about the finished job
                 async with self.job_done_condition:
                     self.job_done_condition.notify_all()
 
