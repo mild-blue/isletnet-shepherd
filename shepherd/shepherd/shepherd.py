@@ -257,6 +257,10 @@ class Shepherd:
         status.error_details = error
         status.finished_at = datetime.utcnow()
 
+        # notify about the finished job
+        async with self.job_done_condition:
+            self.job_done_condition.notify_all()
+
         try:
             shutil.rmtree(path.join(sheep.sheep_data_root, job_id), ignore_errors=True)
             await self._job_status_update_queue.enqueue_task(self._storage.set_job_status(job_id, status.copy()))
@@ -289,6 +293,11 @@ class Shepherd:
                     status.finished_at = datetime.utcnow()
                     await self._job_status_update_queue.enqueue_task(self._storage.set_job_status(job_id, status.copy()))
                     logging.info('Job `%s` from sheep `%s` done', job_id, sheep_id)
+
+                    # notify about the finished job
+                    async with self.job_done_condition:
+                        self.job_done_condition.notify_all()
+                        
                 elif isinstance(message, ErrorMessage):
                     error = ErrorModel({
                         "message": message.message,
@@ -299,10 +308,6 @@ class Shepherd:
                     logging.info('Job `%s` from sheep `%s` failed (%s)', job_id, sheep_id, message.message)
 
                 sheep.in_progress.remove(job_id)
-
-                # notify about the finished job
-                async with self.job_done_condition:
-                    self.job_done_condition.notify_all()
 
     def get_status(self) -> Generator[Tuple[str, SheepModel], None, None]:
         """
