@@ -281,6 +281,7 @@ class Shepherd:
                 sheep = self._get_sheep(sheep_id)
                 message = await Messenger.recv(sheep.socket, [DoneMessage, ErrorMessage], noblock=True)
                 job_id = message.job_id
+                
                 # clean-up the working directory and upload the results
                 working_directory = path.join(self._get_sheep(sheep_id).sheep_data_root, job_id)
                 await self._storage.push_job_data(job_id, working_directory)
@@ -297,7 +298,7 @@ class Shepherd:
                     # notify about the finished job
                     async with self.job_done_condition:
                         self.job_done_condition.notify_all()
-                        
+
                 elif isinstance(message, ErrorMessage):
                     error = ErrorModel({
                         "message": message.message,
