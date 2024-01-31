@@ -293,6 +293,11 @@ class Shepherd:
                     status.finished_at = datetime.utcnow()
                     await self._job_status_update_queue.enqueue_task(self._storage.set_job_status(job_id, status.copy()))
                     logging.info('Job `%s` from sheep `%s` done', job_id, sheep_id)
+                    
+                    # notify about the finished job
+                    async with self.job_done_condition:
+                        self.job_done_condition.notify_all()
+
                 elif isinstance(message, ErrorMessage):
                     error = ErrorModel({
                         "message": message.message,
@@ -300,15 +305,10 @@ class Shepherd:
                         "exception_traceback": message.exception_traceback
                     })
                     await self._report_job_failed(job_id, error, sheep)
-                    self._job_status.pop(job_id)
-                    logging.info('Job `%s` from sheep `%s` failed (%s)', job_id, sheep_id, message.short_error)
+                    logging.info('Job `%s` from sheep `%s` failed (%s)', job_id, sheep_id, message.message)
 
-                # notify about the finished job
                 sheep.in_progress.remove(job_id)
-
-                async with self.job_done_condition:
-                    self.job_done_condition.notify_all()
-
+                
     def get_status(self) -> Generator[Tuple[str, SheepModel], None, None]:
         """
         Get status information for all sheep
